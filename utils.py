@@ -82,13 +82,23 @@ def get_gradcam_img(model, target_layer, input_tensor, imgs, preds):
     imgs: original de-normalized images <B,C,H,W>
     preds: can be preds or ground truth (label for which Grad CAM needs to be computed)
     '''
+    '''
+        model: your trained model obj
+        target_layer: layer in the model where you want to esimate Grad-CAM
+        input_tensor: input to model (usually normalized image) <1,C,H,W>
+        imgs: original de-normalized images <B,C,H,W>
+        preds: can be preds or ground truth (label for which Grad CAM needs to be computed)
+        '''
     targets = [ClassifierOutputTarget(pr) for pr in preds]
     target_layers = [model.layer3[-1]]
+    cam_images = np.ones(imgs.shape).astype(np.uint8)
     with GradCAM(model=model, target_layers=target_layers) as cam:
         grayscale_cams = cam(input_tensor=input_tensor, targets=targets)
-        cam_image = show_cam_on_image(imgs, grayscale_cams[0, :], use_rgb=True)
+        print(grayscale_cams.shape)
+        for i in range(imgs.shape[0]):
+            cam_images[i] = np.uint8(show_cam_on_image(imgs[i], grayscale_cams[i], use_rgb=True))
 
-    return grayscale_cams, cam_image
+    return grayscale_cams, cam_images
 
 def show_gradcam_plots(grayscale_cams, cam_image, original_imgs, classes, \
                        preds, labels, resize=(32,32), figsize=(20,20)):
@@ -119,6 +129,7 @@ def show_gradcam_plots(grayscale_cams, cam_image, original_imgs, classes, \
         axes[i].set_xticks([], [])
         axes[i].set_yticks([], [])
         axes[i].set_title(f"Pred:{pred_label}, True:{true_label}")
+    plt.show()
 
 def show_misclassified_imgs(misclassified, classes, nmax=10, figsize=(20,20)):
     imgs =misclassified['data'][0:nmax]
@@ -135,3 +146,4 @@ def show_misclassified_imgs(misclassified, classes, nmax=10, figsize=(20,20)):
         axes[i].set_xticks([], [])
         axes[i].set_yticks([], [])
         axes[i].set_title(f"Pred:{pred_label}, True:{true_label}")
+    plt.show()
