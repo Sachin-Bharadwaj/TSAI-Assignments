@@ -8,6 +8,7 @@ def train_epoch(model, device, train_loader, optimizer, criterion, epoch, train_
     pbar = tqdm(train_loader)
     correct = 0
     processed = 0
+    train_loss = 0
     for batch_idx, (data, target) in enumerate(pbar):
         # get samples
         data, target = data.to(device), target.to(device)
@@ -24,10 +25,9 @@ def train_epoch(model, device, train_loader, optimizer, criterion, epoch, train_
         #loss = F.nll_loss(y_pred, target)
         loss = criterion(y_pred, target)
 
-        if "loss" in train_stats:
-            train_stats["loss"].append(loss)
-        else:
-            train_stats["loss"] = [loss]
+        train_loss += loss.item()
+
+
         # train_losses.append(loss)
 
         # Backpropagation
@@ -45,10 +45,17 @@ def train_epoch(model, device, train_loader, optimizer, criterion, epoch, train_
         pbar.set_description(
             desc=f"Loss={loss.item()} Batch_id={batch_idx} Accuracy={100 * correct / processed:0.2f}"
         )
-        if "acc" in train_stats:
-            train_stats["acc"].append(100 * correct / processed)
-        else:
-            train_stats["acc"] = [100 * correct / processed]
+
+    train_loss = train_loss/processed
+    if "loss" in train_stats:
+        train_stats["loss"].append(train_loss)
+    else:
+        train_stats["loss"] = [train_loss]
+
+    if "acc" in train_stats:
+        train_stats["acc"].append(100 * correct / processed)
+    else:
+        train_stats["acc"] = [100 * correct / processed]
         # train_acc.append(100 * correct / processed)
 
 
